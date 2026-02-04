@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+<title>Dashboard Artikel Manager (Dummy Version)</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+/* --- DESIGN ASLI DIPERTAHANKAN --- */
+:root {
+  --primary: #0078d4;
+  --primary-hover: #006abc;
+  --bg-body: #f3f3f3;
+  --bg-card: #ffffff;
+  --text-main: #201f1e;
+  --text-sub: #605e5c;
+  --border-color: #e1dfdd;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+  --color-good: #107c10;
+  --color-warning: #d83b01;
+  --color-critical: #a80000;
+}
+
+body {
+  background-color: var(--bg-body);
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+#page-preloader {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #fff; z-index: 9999;
+  display: flex; justify-content: center; align-items: center; flex-direction: column;
+  transition: opacity 0.5s ease;
+}
+
+.navbar-fluent {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
+  position: sticky; top: 0; z-index: 1000;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.brand-title { font-weight: 700; font-size: 18px; color: #3c4043; display: flex; align-items: center; gap: 10px; }
+
+.welcome-section {
+  background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+  color: white; padding: 30px 20px; margin-bottom: -40px; padding-bottom: 60px;
+}
+
+.main-container {
+  max-width: 1100px; margin: 0 auto; padding: 0 15px; position: relative;
+}
+.fluent-card {
+  background: var(--bg-card); border-radius: var(--radius);
+  box-shadow: var(--shadow-card); border: 1px solid var(--border-color);
+  margin-bottom: 20px; overflow: hidden;
+}
+.fluent-card.padded { padding: 20px; }
+
+.quota-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  transition: border-color 0.3s;
+}
+
+.quota-donut {
+  width: 55px; height: 55px;
+  border-radius: 50%;
+  background: conic-gradient(var(--chart-color, var(--primary)) var(--p, 0%), #edebe9 0);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  transition: --p 0.5s ease;
+}
+
+.quota-donut::before {
+  content: "";
+  width: 45px; height: 45px;
+  background: #fff; border-radius: 50%;
+  position: absolute;
+}
+
+.quota-donut span {
+  position: relative; z-index: 2;
+  font-size: 12px; font-weight: 700;
+  color: var(--text-sub);
+}
+
+.quota-details span { font-size: 16px; margin: 0; color: var(--text-main); font-weight: 600; }
+.quota-details small { font-size: 12px; color: var(--text-sub); }
+
+.collapse-toggle { cursor: pointer; transition: background 0.2s; }
+.collapse-toggle:hover { background-color: #f9f9f9; }
+.collapse-toggle[aria-expanded="true"] .icon-rotate { transform: rotate(180deg); }
+.icon-rotate { transition: transform 0.3s ease; }
+
+.search-box { border-radius: 4px; border: 1px solid #8a8886; padding: 8px 12px; }
+.search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,120,212,0.2); }
+
+.table-responsive { border-radius: 4px; border: 1px solid var(--border-color); }
+.table { margin-bottom: 0; white-space: nowrap; }
+.table thead th {
+  background: #faf9f8; border-bottom: 2px solid var(--border-color);
+  color: var(--text-sub); font-weight: 600; font-size: 13px; padding: 12px;
+}
+.table tbody td {
+  vertical-align: middle; padding: 12px; border-bottom: 1px solid #f3f2f1; font-size: 14px;
+}
+.table tbody tr:hover { background-color: #f3f2f1; }
+
+.badge-fluent { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.st-DRAFT { background: #fff4ce; color: #795e00; border: 1px solid #fde7a5; }
+.st-PUBLISHED { background: #dff6dd; color: #107c10; border: 1px solid #c8e6c9; }
+.st-REJECTED { background: #fde7e9; color: #a80000; border: 1px solid #fad2cf; }
+
+.btn-action { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; margin-left: 4px; border: 1px solid transparent; }
+.btn-action:hover { background: #edebe9; border-color: #c8c6c4; }
+
+.broadcast-row { border-left: 4px solid transparent; transition: all 0.2s; }
+.broadcast-row:hover { filter: brightness(0.98); }
+.bc-INFO { background-color: #f0f7ff; color: #004578; border-left-color: #0078d4; }
+.bc-badge-INFO { background-color: #cce4ff; color: #004578; }
+.bc-WARNING { background-color: #fff9e6; color: #705102; border-left-color: #ffaa00; }
+.bc-badge-WARNING { background-color: #ffeeb3; color: #664b00; }
+.bc-CRITICAL { background-color: #fde7e9; color: #a80000; border-left-color: #d13438; }
+.bc-badge-CRITICAL { background-color: #f9d3d6; color: #a80000; }
+.bc-id-badge { font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.08); margin-right: 8px; }
+.bc-date { font-size: 12px; opacity: 0.8; white-space: nowrap; }
+
+footer {
+  text-align: center; padding: 20px; font-size: 12px; color: var(--text-sub);
+  border-top: 1px solid var(--border-color); background: #fff; margin-top: auto;
+}
+footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+.modal-content { border-radius: 8px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.modal-header { border-bottom: 1px solid #edebe9; background: #f8f9fa; border-radius: 8px 8px 0 0; }
+.detail-row { display: flex; margin-bottom: 12px; border-bottom: 1px solid #f3f2f1; padding-bottom: 8px; }
+.detail-label { width: 100px; font-weight: 600; color: var(--text-sub); font-size: 13px; flex-shrink: 0;}
+.detail-value { flex: 1; font-size: 14px; word-break: break-all; }
+
+.img-thumb-container {
+  width: 120px; height: 80px; overflow: hidden; border-radius: 4px; border: 1px solid #ddd;
+  display: flex; align-items: center; justify-content: center; background: #f9f9f9; cursor: pointer;
+}
+.img-thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+.img-thumb-container:hover img { transform: scale(1.05); }
+
+.modal-fullscreen-img { max-width: 90%; margin: 1.75rem auto; }
+.modal-fullscreen-img .modal-body { padding: 0; background: transparent; display: flex; justify-content: center; }
+.lightbox-img { max-width: 100%; max-height: 85vh; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+
+.status-badge-container {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.badge-status {
+  padding: 5px 12px;
+  border-radius: 4px; 
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-premium {
+  background: #fff;
+  color: #0078d4;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.badge-trial {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.badge-premium i { 
+  color: #ffaa00; 
+}
+
+@media (max-width: 576px) {
+  .welcome-section { padding: 20px 15px; padding-bottom: 50px; }
+  .fluent-card.padded { padding: 15px; }
+  .brand-title span { display: none; }
+  .quota-panel { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .quota-donut { align-self: center; }
+}
+</style>
+</head>
+<body>
+
+<div id="page-preloader">
+  <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+  <div class="mt-3 text-secondary fw-bold">Memuat Dashboard Dummy...</div>
+</div>
+
+<nav class="navbar-fluent d-flex justify-content-between align-items-center">
+  <div class="brand-title">
+    <i class="bi bi-grid-1x2-fill" style="color: #0078D4;"></i>
+    <span>Blogger<span class="fw-bold text-primary">PostManager</span></span>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span id="licenseBadge" class="badge bg-light text-secondary border d-flex align-items-center gap-1">
+      <span class="spinner-border spinner-border-sm" style="width:0.7rem;height:0.7rem;"></span> Cek Status...
+    </span>
+    
+    <span id="headerLoader" class="spinner-border spinner-border-sm text-primary d-none ms-2"></span>
+    <button class="btn btn-sm btn-outline-primary fw-bold ms-2" onclick="refreshAll()">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+</nav>
+
+<div class="welcome-section">
+  <div class="container-fluid" style="max-width: 1100px;">
+    <div id="statusBadgePlaceholder" class="status-badge-container"></div>
+    <span class="fw-bold fs-5 mb-1">Selamat Datang, Admin (Dummy)!</span>
+    <p class="mb-0 opacity-75">Kelola kiriman artikel tamu dan pantau status publikasi (Mode Simulasi).</p>
+  </div>
+</div>
+
+<div class="main-container">
+  
+  <div id="quotaContainer" class="fluent-card padded quota-panel" style="display: none;">
+    <div class="quota-details">
+      <span><i class="bi bi-speedometer2 text-primary me-2"></i>Status Kuota Harian (API)</span><br />
+      <small>Kuota reset otomatis setiap pukul 00:00 WIB.</small>
+      <div class="mt-2 d-flex gap-3 text-muted" style="font-size: 13px;">
+        <span>Terpakai: <strong class="text-dark" id="qUsed">-</strong></span>
+        <span>Limit: <strong class="text-dark" id="qLimit">-</strong></span>
+      </div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-3">
+        <div class="text-end d-none d-sm-block">
+            <div class="fw-bold text-dark" style="font-size: 14px;">Sisa Kuota</div>
+            <div id="qTextRemaining" class="small text-muted">- Request</div>
+        </div>
+        <div class="quota-donut" id="qCircle" style="--p: 100%;">
+            <span id="qPercent">100%</span>
+        </div>
+    </div>
+  </div>
+
+  <div class="fluent-card padded">
+    <div class="row g-2 mb-3 align-items-center">
+      <div class="d-flex align-items-center border-bottom pb-2 mb-2">
+        <i class="bi bi-card-checklist text-primary fs-5 me-2"></i>
+        <span class="fw-bold mb-0 text-dark">Daftar Publikasi Artikel</span>
+      </div>
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input id="searchInput" class="form-control border-start-0 ps-0" placeholder="Cari Judul atau Penulis..." onkeyup="resetPageAndRender()">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select id="statusFilter" class="form-select" onchange="resetPageAndRender()">
+          <option value="ALL">Semua Status</option>
+          <option value="DRAFT">Draft (Perlu Review)</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="REJECTED">Ditolak</option>
+        </select>
+      </div>
+      <div class="col-md-3 text-end text-muted small">
+        <span id="totalDataBadge">Loading...</span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover" style="min-width: 700px;">
+        <thead>
+          <tr>
+            <th width="15%">Tanggal</th>
+            <th width="20%">Penulis</th>
+            <th width="35%">Judul Artikel</th>
+            <th width="10%">Status</th>
+            <th width="20%" class="text-end">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div class="small text-muted" id="paginationInfo">Menampilkan 0 - 0 dari 0</div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item"><button class="page-link text-dark" onclick="prevPage()" id="btnPrev">Previous</button></li>
+          <li class="page-item"><button class="page-link text-dark" onclick="nextPage()" id="btnNext">Next</button></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="fluent-card">
+    <div class="collapse-toggle d-flex align-items-center justify-content-between p-3 border-bottom" 
+         data-bs-toggle="collapse" 
+         data-bs-target="#collapseBroadcast" 
+         aria-expanded="true" 
+         aria-controls="collapseBroadcast">
+      
+      <div class="d-flex align-items-center">
+        <i class="bi bi-megaphone text-primary fs-5 me-2"></i>
+        <span class="fw-bold mb-0 text-dark">Informasi & Pesan Server</span>
+      </div>
+      
+      <i class="bi bi-chevron-down text-muted icon-rotate"></i>
+    </div>
+    
+    <div id="collapseBroadcast" class="collapse show">
+      <div class="table-responsive border-0">
+        <table class="table align-middle" style="min-width: 700px;">
+          <tbody id="broadcastBody">
+            <tr><td class="text-center py-3 text-muted">Memuat pesan server...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="container">
+    <div class="fw-bold text-dark">&copy; <script>document.write(new Date().getFullYear())</script> Portal Tulis Tamu</div>
+    <div class="mt-1">
+      Developed by <a href="#" target="_blank">Demo Mode</a>
+    </div>
+  </div>
+</footer>
+
+<div class="modal fade" id="rejectModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger-subtle text-danger">
+        <h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Tolak Artikel</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">Artikel ini akan dihapus dan penulis akan mendapatkan notifikasi email.</p>
+        <label class="form-label fw-bold small">Alasan Penolakan:</label>
+        <textarea id="rejectReason" class="form-control" rows="4" placeholder="Contoh: Artikel mengandung plagiasi..."></textarea>
+        <input type="hidden" id="rejRow">
+        <input type="hidden" id="rejId">
+        <input type="hidden" id="rejEmail">
+        <input type="hidden" id="rejTitle">
+        <input type="hidden" id="rejImg"> 
+      </div>
+      <div class="modal-footer pt-1 pb-2 border-0">
+        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-sm btn-danger px-3" onclick="confirmReject()">Kirim Penolakan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold"><i class="bi bi-info-circle-fill text-primary me-2"></i>Detail Artikel</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-4">
+        <div class="detail-row align-items-center">
+          <div class="detail-label">Post ID</div>
+          <div class="detail-value d-flex align-items-center gap-2">
+            <code id="d-postId" class="bg-light px-2 py-1 rounded text-primary fw-bold">...</code>
+            <button class="btn btn-xs btn-outline-secondary" onclick="copyPostId()" title="Salin ID"><i class="bi bi-copy"></i></button>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Kategori</div>
+          <div class="detail-value" id="d-category">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Email</div>
+          <div class="detail-value text-muted" id="d-email">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">URL Post</div>
+          <div class="detail-value" id="d-postUrl">-</div>
+        </div>
+        <div class="detail-row border-0">
+          <div class="detail-label">Gambar</div>
+          <div class="detail-value">
+            <div id="d-imgContainer" class="img-thumb-container d-none" onclick="openLightbox()">
+              <img id="d-imgThumb" src="" alt="Thumbnail" onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=No+Image';">
+            </div>
+            <div id="d-noImage" class="text-muted small fst-italic d-none">Tidak ada gambar</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-img">
+    <div class="modal-content bg-transparent border-0 shadow-none">
+      <div class="modal-body text-center position-relative">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index: 1050; background-color: white; opacity: 1;"></button>
+        <img id="lightboxImg" src="" class="lightbox-img">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="previewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg"> <div class="modal-content">
+      <div class="modal-header bg-light">
+        <div>
+          <h6 class="modal-title fw-bold" id="previewTitle">Memuat Judul...</h6>
+          <span class="badge bg-warning text-dark border border-warning-subtle" style="font-size: 10px;">PREVIEW MODE (DUMMY)</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="previewContent" style="font-family: Georgia, serif; line-height: 1.6; color: #333;">
+            </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+// --- CONFIGURATION ---
+const ITEMS_PER_PAGE = 10; // Updated to 10
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let rejectModal, detailModal, lightboxModal, previewModal;
+
+// --- INITIALIZATION ---
+document.addEventListener("DOMContentLoaded", function(){
+  rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+  detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+  lightboxModal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+  previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+  
+  refreshAll();
+});
+
+function refreshAll() {
+  // Simulasi Loading
+  const preloader = document.getElementById('page-preloader');
+  if(preloader) preloader.style.display = 'flex';
+  
+  setTimeout(() => {
+      loadDummyData();
+      loadDummyBroadcasts();
+      checkDummyLicense();
+      
+      // Hide preloader
+      if(preloader) {
+          preloader.style.opacity = '0';
+          setTimeout(() => { preloader.style.display = 'none'; }, 500);
+      }
+  }, 1000); // Fake delay 1 second
+}
+
+// --- DUMMY DATA GENERATOR ---
+function loadDummyData() {
+    allData = [];
+    const statuses = ['DRAFT', 'PUBLISHED', 'REJECTED'];
+    const names = ["Andi Saputra", "Siti Nurhaliza", "Budi Santoso", "Rina Marlina", "John Doe", "Jane Smith", "Ahmad Dhani", "Clara Wijaya"];
+    const titles = [
+        "Cara Mengoptimalkan SEO Website", "Tips Menulis Artikel yang Menarik", 
+        "Panduan Belajar Coding untuk Pemula", "Review Laptop Gaming Terbaik 2026",
+        "Resep Masakan Tradisional Modern", "Strategi Marketing di Media Sosial",
+        "Mengenal Teknologi AI Terbaru", "Tips Liburan Hemat ke Jepang"
+    ];
+    
+    // Generate 25 Data
+    for (let i = 0; i < 25; i++) {
+        const randStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const randName = names[Math.floor(Math.random() * names.length)];
+        const randTitle = titles[Math.floor(Math.random() * titles.length)] + " - Bagian " + (i+1);
+        
+        allData.push({
+            row: i,
+            date: `2026-02-${String((i % 28) + 1).padStart(2, '0')} 10:00`,
+            name: randName,
+            title: randTitle,
+            status: randStatus,
+            postId: `POST-${1000 + i}`,
+            email: `user${i}@example.com`,
+            category: (i % 2 === 0) ? "Teknologi" : "Gaya Hidup",
+            image: `https://placehold.co/600x400/0078d4/ffffff?text=Image+${i+1}`,
+            url: `https://example.com/post-${i}`
+        });
+    }
+    
+    resetPageAndRender();
+}
+
+function loadDummyBroadcasts() {
+    const tbody = document.getElementById('broadcastBody');
+    tbody.innerHTML = '';
+    
+    const msgs = [
+        {id: 'MSG-001', type: 'INFO', date: '2026-02-01', message: 'Selamat datang di versi Demo Dashboard.'},
+        {id: 'MSG-002', type: 'WARNING', date: '2026-02-03', message: 'Ini adalah data dummy, perubahan tidak akan tersimpan ke server.'},
+        {id: 'MSG-003', type: 'CRITICAL', date: '2026-02-04', message: 'Maintenance server dijadwalkan minggu depan.'}
+    ];
+
+    msgs.forEach(msg => {
+      let typeClass = 'bc-INFO', icon = 'bi-info-circle-fill', badgeClass = 'bc-badge-INFO';
+      if(msg.type === 'WARNING') { typeClass = 'bc-WARNING'; icon = 'bi-exclamation-triangle-fill'; badgeClass = 'bc-badge-WARNING'; } 
+      else if(msg.type === 'CRITICAL') { typeClass = 'bc-CRITICAL'; icon = 'bi-x-octagon-fill'; badgeClass = 'bc-badge-CRITICAL'; }
+
+      const row = `
+        <tr class="broadcast-row ${typeClass} border-bottom">
+          <td width="20%" class="ps-3 py-3 align-top border-bottom-0">
+             <div class="d-flex flex-column gap-1"><span class="bc-date text-dark fw-bold"><i class="bi bi-calendar-event me-1"></i>${msg.date}</span><span class="bc-id-badge text-secondary fit-content">${msg.id}</span></div>
+          </td>
+          <td width="15%" class="py-3 align-top border-bottom-0"><span class="badge ${badgeClass} border border-opacity-25 rounded-pill px-2 py-1"><i class="bi ${icon} me-1"></i>${msg.type}</span></td>
+          <td width="65%" class="pe-3 py-3 align-top border-bottom-0"><div class="text-dark" style="font-size:14px; line-height:1.6; white-space: pre-line;">${msg.message}</div></td>
+        </tr>`;
+      tbody.innerHTML += row;
+    });
+}
+
+function checkDummyLicense() {
+    const badge = document.getElementById('licenseBadge');
+    
+    // Simulasi Sukses Premium
+    badge.className = 'badge bg-success-subtle text-success border border-success-subtle d-flex align-items-center gap-1';
+    badge.innerHTML = `<i class="bi bi-patch-check-fill"></i> v1.0 (Dummy)`;
+    badge.style.cursor = 'default';
+
+    // Render Status Badge
+    document.getElementById('statusBadgePlaceholder').innerHTML = `
+        <div class="badge-status badge-premium">
+            <i class="bi bi-gem"></i> Premium Account
+        </div>
+    `;
+
+    // Render Quota Dummy
+    renderQuotaWidget({used: 25, limit: 100, remaining: 75});
+}
+
+function renderQuotaWidget(quota) {
+    const container = document.getElementById('quotaContainer');
+    const qUsed = document.getElementById('qUsed');
+    const qLimit = document.getElementById('qLimit');
+    const qRemaining = document.getElementById('qTextRemaining');
+    const qPercent = document.getElementById('qPercent');
+    const circle = document.getElementById('qCircle');
+    
+    container.style.display = 'flex';
+    
+    const limit = quota.limit > 0 ? quota.limit : 1;
+    const percentLeft = Math.round((quota.remaining / limit) * 100);
+    
+    qUsed.innerText = quota.used;
+    qLimit.innerText = quota.limit;
+    qRemaining.innerText = quota.remaining + ' Request';
+    qPercent.innerText = percentLeft + '%';
+    circle.style.setProperty('--p', percentLeft + '%');
+    
+    let color = 'var(--color-good)'; 
+    let borderColor = 'var(--primary)';
+    circle.style.setProperty('--chart-color', color);
+    container.style.borderLeftColor = borderColor;
+}
+
+// --- FILTER & PAGINATION ---
+function resetPageAndRender() { currentPage = 1; processData(); }
+
+function processData() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+
+  filteredData = allData.filter(item => {
+    const matchSearch = item.title.toLowerCase().includes(search) || item.name.toLowerCase().includes(search);
+    const matchStatus = statusFilter === 'ALL' || item.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  document.getElementById('totalDataBadge').innerText = `Total: ${filteredData.length} Data`;
+  renderTable();
+  renderPagination();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  if (filteredData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-5 text-muted fst-italic">Tidak ada data ditemukan</td></tr>';
+    return;
+  }
+
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const pageData = filteredData.slice(start, end);
+
+  pageData.forEach(item => {
+    const statusClass = `st-${item.status}`;
+    const shortTitle = item.title.length > 40 ? item.title.substring(0, 40) + '...' : item.title;
+    
+    let actionBtns = '';
+    // Parameter untuk detail modal
+    const detailParams = `'${item.postId}', '${item.category}', '${item.email}', '${item.image}', '${item.url}', '${item.status}'`;
+    
+    // Parameter untuk action (dummy)
+    const actionParams = `this, '${item.title}'`;
+
+    const btnDetail = `<button class="btn-action text-info" title="Detail Info" onclick="openDetailModal(${detailParams})"><i class="bi bi-info-circle"></i></button>`;
+
+    if (item.status === 'DRAFT') {
+      actionBtns = `
+        <button class="btn-action text-success" title="Publish" onclick="dummyAction('Publish', '${item.title}')"><i class="bi bi-check-lg"></i></button>
+        <button class="btn-action text-danger" title="Tolak" onclick="openRejectModal('${item.title}', '${item.image}')"><i class="bi bi-x-lg"></i></button>
+        ${btnDetail}
+      `;
+    } else if (item.status === 'PUBLISHED') {
+      actionBtns = `<button class="btn-action text-warning" title="Kembalikan ke Draft" onclick="dummyAction('Revert', '${item.title}')"><i class="bi bi-arrow-counterclockwise"></i></button>${btnDetail}`;
+    } else {
+      actionBtns = btnDetail;
+    }
+
+    const rowHtml = `
+      <tr>
+        <td class="text-muted small">${item.date}</td>
+        <td class="fw-semibold text-dark">${item.name}</td>
+        <td>${shortTitle}</td>
+        <td><span class="badge-fluent ${statusClass}">${item.status}</span></td>
+        <td class="text-end">${actionBtns}</td>
+      </tr>`;
+    tbody.innerHTML += rowHtml;
+  });
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length);
+  document.getElementById('paginationInfo').innerText = filteredData.length > 0 ? `Menampilkan ${startItem} - ${endItem} dari ${filteredData.length}` : '0 Data';
+  
+  const btnPrev = document.getElementById('btnPrev').parentElement;
+  const btnNext = document.getElementById('btnNext').parentElement;
+  
+  if(currentPage === 1) btnPrev.classList.add('disabled'); else btnPrev.classList.remove('disabled');
+  if(currentPage >= totalPages) btnNext.classList.add('disabled'); else btnNext.classList.remove('disabled');
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); renderPagination(); } }
+function nextPage() { const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE); if (currentPage < totalPages) { currentPage++; renderTable(); renderPagination(); } }
+
+// --- ACTIONS & MODALS ---
+
+function openDetailModal(id, cat, email, img, url, status) {
+  document.getElementById('d-postId').innerText = id;
+  document.getElementById('d-category').innerText = cat;
+  document.getElementById('d-email').innerText = email;
+  const urlDiv = document.getElementById('d-postUrl');
+  
+  if (status === 'PUBLISHED') {
+    urlDiv.innerHTML = `<a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-box-arrow-up-right me-1"></i> Buka Artikel Live</a>`;
+  } else if (status === 'DRAFT') {
+    urlDiv.innerHTML = `<button onclick="loadPreviewDummy('${id}')" class="btn btn-sm btn-outline-warning text-dark fw-bold border-warning"><i class="bi bi-eye me-1"></i> Preview Draft</button>`;
+  } else { 
+    urlDiv.innerText = '-'; 
+  }
+
+  const imgContainer = document.getElementById('d-imgContainer');
+  const imgThumb = document.getElementById('d-imgThumb');
+  const noImg = document.getElementById('d-noImage');
+  
+  if (img && img !== 'undefined') {
+    imgThumb.src = img; imgContainer.classList.remove('d-none'); noImg.classList.add('d-none'); document.getElementById('lightboxImg').src = img;
+  } else { imgContainer.classList.add('d-none'); noImg.classList.remove('d-none'); }
+  
+  detailModal.show();
+}
+
+function openLightbox() { lightboxModal.show(); }
+function copyPostId() { alert("ID Tersalin (Dummy)!"); }
+
+function openRejectModal(title, imgUrl) {
+    document.getElementById('rejTitle').value = title;
+    document.getElementById('rejectReason').value = '';
+    rejectModal.show();
+}
+
+function confirmReject() {
+    const reason = document.getElementById('rejectReason').value;
+    if(!reason) { alert("Isi alasan penolakan!"); return; }
+    rejectModal.hide();
+    dummyAction("Reject", document.getElementById('rejTitle').value + " (Alasan: " + reason + ")");
+}
+
+function dummyAction(action, title) {
+    if(!confirm(`Apakah Anda yakin ingin melakukan aksi ${action} pada "${title}"?`)) return;
+    
+    // Simulate Processing
+    document.body.style.cursor = 'wait';
+    document.getElementById('headerLoader').classList.remove('d-none');
+    
+    setTimeout(() => {
+        document.body.style.cursor = 'default';
+        document.getElementById('headerLoader').classList.add('d-none');
+        alert(`Sukses! Aksi ${action} berhasil dilakukan (Simulasi).`);
+        // Refresh data acak lagi untuk efek dinamis
+        loadDummyData(); 
+    }, 800);
+}
+
+function loadPreviewDummy(postId) {
+    previewModal.show();
+    document.getElementById('previewTitle').innerText = "Preview: " + postId;
+    document.getElementById('previewContent').innerHTML = `
+      <div class="text-center mb-4">
+        <img src="https://placehold.co/800x400/e0e0e0/555?text=Dummy+Feature+Image" style="max-width:100%; height:auto; border-radius:8px;">
+      </div>
+      <h3>Contoh Judul Artikel Dummy</h3>
+      <p><b>Lorem ipsum dolor sit amet</b>, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+      <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <blockquote>"Ini adalah contoh kutipan dalam artikel untuk melihat bagaimana format blockquote ditampilkan dalam mode preview."</blockquote>
+      <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+    `;
+}
+
+</script>
+</body>
+</html>
